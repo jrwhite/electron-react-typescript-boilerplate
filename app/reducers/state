@@ -1,0 +1,83 @@
+
+ state.network = {
+     ghost: {
+         exists: boolean,
+         type: "neuron"/"synapse",
+         id: "nXXX"/"sYYY"
+     },
+     neurons: [
+         {
+            id: 'nXXX',
+            pos: (x, y),
+            length: 100,
+            width: 50,
+            potential: XX%,
+            axon: {
+                synapses: {
+                    'sXXX',
+                    'sYYY',
+                    ...
+                }
+            },
+            dendrites: {
+                {
+                    id: 'dXXX',
+                    weighting: 0-100%,
+                    synapses: {
+                        'sXXX',
+                        'sYYY',
+                        ...
+                    }
+                },
+                ...
+            }
+
+         },
+         ...
+     ],
+     synapses: [
+         {
+            id: 'sXXX',
+            isGhost: boolean,
+            axon: {
+                neuronId: 'nXXX',
+                absolutePos: (x, y)
+            },
+            dendrite: {
+                neuronId: 'nXXX',
+                dendriteId: 'dYYY',
+                absolutePos: (x, y),
+                theta: 0-2PI
+            },
+            length: number,
+            width: number,
+            speed: multiplier
+         },
+         ...
+     ]
+ }
+
+<svg>
+    onContextMenu: addNeuron
+    onMouseMove: moveGhostSynapse 
+    onClick: closeOverlay
+    <Neuron>
+        onContextMenu: removeNeuron
+        onDrag: moveNeuron
+        onClick: drawNeuronOverlay finishSynapseAtNewDendrite
+        <Axon>
+            onClick startSynapse
+        <Dendrite>
+            onContextMenu: removeSynapse
+            onDrag moveDendrite
+            onClick drawSynapseOverlay finishSynapseAtDendrite
+            onScroll adjustWeighting
+            ...
+        ...
+    <Synapse>
+        onClick drawSynapseOverlay
+        onScroll adjustSpeed
+        ...
+
+IPC Actions:
+    exciteNeuron

@@ -33,6 +33,11 @@ type ArcBezier = {
     q2: Point
 }
 
+export const addPoints = (p1: Point, p2: Point): Point => ({
+    x: p1.x + p2.x,
+    y: p2.y + p2.y
+})
+
 const el = (ellipse: Ellipse, nu: number) : Point => ({
     "x": (ellipse.major * Math.cos(ellipse.theta) * Math.cos(nu)) - (ellipse.minor * Math.sin(ellipse.theta) * Math.sin(nu)),
     "y": (ellipse.major * Math.sin(ellipse.theta) * Math.cos(nu)) + (ellipse.minor * Math.cos(ellipse.theta) * Math.sin(nu))

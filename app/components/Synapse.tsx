@@ -1,13 +1,17 @@
 import * as React from 'react'
 import { RouteComponentProps } from 'react-router';
-import { Point, Line } from '../utils/geometry';
+import { Point } from '../utils/geometry';
+import { Line } from './Line';
 
 export interface IProps extends RouteComponentProps<any> {
     id: string,
-    isGhost: boolean,
-    line: Line,
-    axon: {neuronId: string},
-    dendrite: {neuronId: string, dendriteId: string},
+    axon: {id: string, neuronId: string},
+    dend: {id: string, neuronId: string},
+    length: number,
+    width: number,
+    speed: number,
+    axonPos: Point,
+    dendPos: Point
 }
 
 export class Synapse extends React.Component<IProps> {
@@ -15,20 +19,15 @@ export class Synapse extends React.Component<IProps> {
 
     render() {
         const {
-            id,
-            isGhost,
-            line,
-            axon,
-            dendrite,
+            axonPos,
+            dendPos,
         } = this.props
+
+        const line = {start: axonPos, stop: dendPos}
 
         return (
             <g>
-                <line
-                    stroke='blue'
-                    x1={line.start.x} x2={line.stop.x}
-                    y1={line.start.y} y2={line.stop.y}
-                />
+                <Line line={line} />
             </g>
         )
     }

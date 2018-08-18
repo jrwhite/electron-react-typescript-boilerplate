@@ -1,8 +1,9 @@
 import * as _ from 'lodash'
-import { Point, Line } from "../utils/geometry";
+import { Point, Line, Ellipse, DendGeo, calcClosestDend } from "../utils/geometry";
 import { actionCreator, actionCreatorVoid } from "./helpers";
 import { AxonStateType, DendStateType } from '../reducers/network';
 import { IState } from '../reducers';
+import { getAxonAbsPos } from '../selectors/synapse';
 
 export type MoveNeuronAction = {
     id: string,
@@ -43,6 +44,14 @@ export type MakeGhostSynapseAtDendAction = {
     neuronId: string
 }
 
+export type AddDendAction = {
+    id: string,
+    neuronId: string,
+    cpos: Point,
+    nu: number,
+    incomingAngle: number
+}
+
 export const moveNeuron = actionCreator<MoveNeuronAction>('MOVE_NEURON')
 export const addNeuron = actionCreator<AddNeuronAction>('ADD_NEURON')
 export const selectNeuron = actionCreator<SelectNeuronAction>('SELECT_NEURON')
@@ -50,6 +59,7 @@ export const addSynapse = actionCreator<AddSynapseAction>('ADD_SYNAPSE')
 export const makeGhostSynapseAtAxon = actionCreator<MakeGhostSynapseAtAxonAction>('MAKE_GHOST_SYNAPSE_AT_AXON')
 export const makeGhostSynapseAtDend = actionCreator<MakeGhostSynapseAtDendAction>('MAKE_GHOST_SYNAPSE_AT_DEND')
 export const resetGhostSynapse = actionCreatorVoid('RESET_GHOST_SYNAPSE')
+export const addDend = actionCreator<AddDendAction>('ADD_DEND')
 
 export function addNewNeuron(pos: Point) {
     return (dispatch: Function) => {
@@ -60,6 +70,23 @@ export function addNewNeuron(pos: Point) {
 export function addNewSynapse(payload: AddNewSynapseAction) {
     return (dispatch: Function) => {
         dispatch(addSynapse({id: _.uniqueId('s'), ...payload}))
+    }
+}
+
+export function addNewDend(neuronId: string, neuronPos: Point, axonPos: Point, bodyEllipse: Ellipse) {
+    return (dispatch: Function) => {
+        const newDendGeo: DendGeo = calcClosestDend(neuronPos, axonPos, bodyEllipse)
+        const newDendId = _.uniqueId('d')
+
+        dispatch(addDend(
+            {
+                id: newDendId,
+                neuronId: neuronId,
+                cpos: newDendGeo.point,
+                nu: newDendGeo.nu,
+                incomingAngle: newDendGeo.inTheta
+            }
+        ))
     }
 }
 
@@ -79,14 +106,36 @@ export function tryMakeSynapseAtDend(id: string, neuronId: string) {
     }
 }
 
+export function tryMakeSynapseAtNewDend(neuronId: string, neuronPos: Point) {
+    // using ghost synapse axon
+    // this likely replaces tryMakeSynapseAtDend
+    return (dispatch: Function, getState: () => IState) => {
+        const ghost = getState().network.ghostSynapse
+
+        if (ghost.axon && !ghost.dend) {
+
+            const newId = _.uniqueId('d')
+            dispatch(
+                addNewDend(
+                    neuronId,
+                    neuronPos,
+                    getAxonAbsPos(getState(), ghost),
+                    { major: 50, minor: 20, theta: 0, ecc: 50 / 20 }
+                )
+            )
+            dispatch(tryMakeSynapseAtDend(newId, neuronId))
+        }
+    }
+}
+
 export function tryMakeSynapseAtAxon(id: string, neuronId: string) {
     return (dispatch: Function, getState: () => IState) => {
         const ghost = getState().network.ghostSynapse
 
         if (ghost.dend && !ghost.axon) {
             dispatch(addNewSynapse({
-                axon: {id: id, neuronId: neuronId},
-                dend: {id: ghost.dend.id, neuronId: ghost.dend.neuronId}
+                axon: { id: id, neuronId: neuronId },
+                dend: { id: ghost.dend.id, neuronId: ghost.dend.neuronId }
             }))
             dispatch(resetGhostSynapse())
         } else {

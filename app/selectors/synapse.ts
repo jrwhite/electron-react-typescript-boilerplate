@@ -7,18 +7,21 @@ import { SynapseState } from "../reducers/network";
 const getSynapse = (state: IState, props: IProps) =>
     state.network.synapses.find(s => s.id === props.id)
 
-const getAxonNeuronPos = (state: IState, props: IProps) =>
-    state.network.neurons.find(n => n.id === props.axon.neuronId)!!
+export const getAxonNeuronPos = (state: IState, props: Partial<IProps>) =>
+    state.network.neurons.find(n => n.id === props.axon!!.neuronId)!!
         .pos
     
 const getDendNeuronPos = (state: IState, props: IProps) =>
     state.network.neurons.find(n => n.id === props.dend.neuronId)!!
         .pos
 
-const getAxonPos = (state: IState, props: IProps) =>
-    state.network.neurons.find(n => n.id === props.axon.neuronId)!!
+export const getAxonPos = (state: IState, props: Partial<IProps>) =>
+    state.network.neurons.find(n => n.id === props.axon!!.neuronId)!!
         .axon!!
         .cpos
+
+export const getAxonAbsPos = (state: IState, props: Partial<IProps>) =>
+    addPoints(getAxonPos(state, props), getAxonNeuronPos(state, props))
 
 const getDendPos = (state: IState, props: IProps) => 
     state.network.neurons.find(n => n.id === props.dend.neuronId)!!

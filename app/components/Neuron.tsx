@@ -2,22 +2,33 @@ import * as React from 'react'
 import { RouteComponentProps, StaticRouter } from 'react-router';
 import { Ellipse } from './Ellipse';
 import { Point } from '../utils/geometry';
-import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, } from '../actions/network';
+import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, } from '../actions/network';
 import Draggable from 'react-draggable'
+import { DendStateType } from '../reducers/network';
+import { NeuronBody } from './NeuronBody'
 
 export interface IProps extends RouteComponentProps<any> {
     selectNeuron: (payload: SelectNeuronAction) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
     tryMakeSynapseAtDend: (payload: MakeGhostSynapseAtDendAction) => void,
+    tryMakeSynapseAtNewDend: (neuronId: string) => void
     id: string,
-    pos: Point
+    pos: Point,
+    dends: Array<DendStateType>
 }
 
 export class Neuron extends React.Component<IProps> {
     props: IProps
 
-    handleClick (e: React.MouseEvent<SVGCircleElement>) {
+    handleNeuronClick (e: React.MouseEvent<SVGGElement>) {
+        e.preventDefault()
+        const { tryMakeSynapseAtNewDend, id } = this.props
+
+        tryMakeSynapseAtNewDend(id)
+    }
+
+    handleAxonClick (e: React.MouseEvent<SVGCircleElement>) {
         e.preventDefault()
         const { tryMakeSynapseAtAxon, id, pos } = this.props
 
@@ -30,16 +41,21 @@ export class Neuron extends React.Component<IProps> {
             moveNeuron,
             pos,
             id,
+            dends
         } = this.props
 
         return (
             <g
                 transform={"translate(" + pos.x + " " + pos.y + ")"}
             >
-                <Ellipse arcs={[{ start: 0, stop: 2 }]} major={50} minor={30} angle={0} />
-                <Ellipse arcs={[{ start: 0, stop: 2 }]} major={30} minor={18} angle={0} />
+                <g
+                        onClick = {this.handleNeuronClick.bind(this)}
+                >
+                    <NeuronBody dends={dends} />
+                    // TODO: Add Soma
+                </g>
                 <circle cx={50} cy={0} r={5}
-                    onClick = {this.handleClick.bind(this)}
+                    onClick = {this.handleAxonClick.bind(this)}
                 />
             </g>
         )

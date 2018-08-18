@@ -1,6 +1,7 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend,  } from "../actions/network";
+import { Arc } from '../utils/geometry'
 
 export type AxonStateType = {
     id: string,
@@ -12,7 +13,8 @@ export type DendStateType = {
     id: string,
     weighting: number,
     cpos: Point,
-    theta: number,
+    nu: number,
+    arc: Arc,
     synapseId: string,
     incomingAngle: number
 }
@@ -84,7 +86,6 @@ export default function network(
     state: NetworkState = initialNetworkState,
     action: IAction
  ) : NetworkState {
-     console.log(action)
     if (moveNeuron.test(action)) {
         return {
             ...state,
@@ -142,8 +143,31 @@ export default function network(
                 }
             }
         }
+    } else if (addDend.test(action)) {
+        return {
+            ...state,
+            neurons: state.neurons.map(
+                (n: NeuronState) => {
+                    if (n.id === action.payload.neuronId) {
+                        n.dends = [
+                            ...n.dends,
+                            {
+                                id: action.payload.id,
+                                cpos: action.payload.cpos,
+                                nu: action.payload.nu,
+                                incomingAngle: action.payload.incomingAngle,
+                                arc: {start: action.payload.nu - 1/8, stop: action.payload.nu + 1/8},
+                                weighting: 30,
+                                synapseId: 's'
+                            }
+                        ]
+                    }
+                    return n
+                }
+            )
+        }
     }
-        else {
+    else {
         return state
     }
 }

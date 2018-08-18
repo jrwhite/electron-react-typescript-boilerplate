@@ -18,12 +18,17 @@ export type Line = {
     stop: Point
 }
 
-
-type Ellipse = {
+export type Ellipse = {
     major: number,
     minor: number,
     theta: number,
     ecc: number
+}
+
+export type DendGeo = {
+    point: Point,
+    nu: number,
+    inTheta: number,
 }
 
 type ArcBezier = {
@@ -35,8 +40,34 @@ type ArcBezier = {
 
 export const addPoints = (p1: Point, p2: Point): Point => ({
     x: p1.x + p2.x,
-    y: p2.y + p2.y
+    y: p1.y + p2.y
 })
+
+export const calcClosestDend = (to: Point, from: Point, ellipse: Ellipse) : DendGeo => {
+    /**
+     * Strategy:
+     * 1. choose a quadrant
+     * 2. go from small to large theta 
+     * 3. keep searching until local maximum
+     * 
+     * lol nevermind, just do it like a circle 
+     */
+
+    const mCircleIn = (to.y - from.y) / (to.x - from.x)
+    const nu = Math.atan(mCircleIn) 
+    const point = el(ellipse, nu)
+
+    const elPrimeIn = elPrime(ellipse, nu)
+    const mEllipseIn =  elPrimeIn.y / elPrimeIn.x
+    // const mCircleTan = -1 * ((point.x - to.x) / (point.y - to.y))
+    const thetaIn = Math.atan(mEllipseIn) - nu
+
+    return {
+        point: point,
+        nu: nu,
+        inTheta: thetaIn
+    }
+}
 
 const el = (ellipse: Ellipse, nu: number) : Point => ({
     "x": (ellipse.major * Math.cos(ellipse.theta) * Math.cos(nu)) - (ellipse.minor * Math.sin(ellipse.theta) * Math.sin(nu)),

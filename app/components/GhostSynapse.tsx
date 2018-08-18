@@ -3,7 +3,7 @@ import { RouteComponentProps } from 'react-router';
 import { Point } from '../utils/geometry';
 import { Line } from './Line';
 
-export interface IProps extends RouteComponentProps<any> {
+export interface IProps{
     axon?: {pos: Point},
     dend?: {pos: Point},
     mouse: any

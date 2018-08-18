@@ -1,6 +1,6 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, AddNeuronAction, startSynapse } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon,  } from "../actions/network";
 
 export type AxonStateType = {
     id: string,
@@ -75,7 +75,7 @@ const initialSynapseState: SynapseState = {
 }
 
 const initialNetworkState: NetworkState = {
-    ghostSynapse: {},
+    ghostSynapse: {axon: undefined, dend: undefined},
     neurons: [],
     synapses: [],
 }
@@ -109,7 +109,7 @@ export default function network(
                 }
             ]
         }
-    } else if (startSynapse.test(action)) {
+    } else if (addSynapse.test(action)) {
         return {
             ...state,
             synapses: [
@@ -117,9 +117,30 @@ export default function network(
                 {
                     ...initialSynapseState,
                     id: action.payload.id,
-
+                    axon: action.payload.axon,
+                    dend: action.payload.dend
                 }
             ]
+        }
+    } else if (makeGhostSynapseAtAxon.test(action)) {
+        return {
+            ...state,
+            ghostSynapse: {
+                axon: {
+                    id: action.payload.id,
+                    neuronId: action.payload.neuronId
+                }
+            }
+        }
+    } else if (makeGhostSynapseAtDend.test(action)) {
+        return {
+            ...state,
+            ghostSynapse: {
+                dend: {
+                    id: action.payload.id,
+                    neuronId: action.payload.neuronId
+                }
+            }
         }
     }
         else {

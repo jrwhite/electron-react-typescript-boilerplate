@@ -8,7 +8,7 @@ import Draggable from 'react-draggable'
 export interface IProps extends RouteComponentProps<any> {
     selectNeuron: (payload: SelectNeuronAction) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
-    tryMakeSynapseAtAxon: (payload: MakeGhostSynapseAtAxonAction) => void,
+    tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
     tryMakeSynapseAtDend: (payload: MakeGhostSynapseAtDendAction) => void,
     id: string,
     pos: Point
@@ -21,7 +21,7 @@ export class Neuron extends React.Component<IProps> {
         e.preventDefault()
         const { tryMakeSynapseAtAxon, id, pos } = this.props
 
-        tryMakeSynapseAtAxon({id: 'a', neuronId: id})
+        tryMakeSynapseAtAxon('a', id)
     }
     
     render() {

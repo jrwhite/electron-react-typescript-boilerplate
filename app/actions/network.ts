@@ -69,11 +69,11 @@ export function tryMakeSynapseAtDend(id: string, neuronId: string) {
 
         if (ghost.axon && !ghost.dend) {
             dispatch(addNewSynapse({
-                axon: ghost.axon,
+                axon: {id: ghost.axon.id, neuronId: ghost.axon.neuronId},
                 dend: {id: id, neuronId: neuronId}
             }))
             dispatch(resetGhostSynapse())
-        }else{
+        } else {
             dispatch(makeGhostSynapseAtDend({id: id, neuronId: neuronId}))
         }
     }
@@ -86,10 +86,10 @@ export function tryMakeSynapseAtAxon(id: string, neuronId: string) {
         if (ghost.dend && !ghost.axon) {
             dispatch(addNewSynapse({
                 axon: {id: id, neuronId: neuronId},
-                dend: ghost.dend
+                dend: {id: ghost.dend.id, neuronId: ghost.dend.neuronId}
             }))
             dispatch(resetGhostSynapse())
-        }else{
+        } else {
             dispatch(makeGhostSynapseAtAxon({id: id, neuronId: neuronId}))
         }
     }

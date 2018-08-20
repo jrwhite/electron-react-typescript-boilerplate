@@ -1,12 +1,14 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron,  } from "../actions/network";
 import { Arc } from '../utils/geometry'
+import * as _ from 'lodash'
+import { Neuron } from "../components/Neuron";
 
 export type AxonStateType = {
     id: string,
     cpos: Point,
-    synapses: Array<string>
+    synapses: Array<{synapseId: string}>
 }
 
 export type DendStateType = {
@@ -94,7 +96,7 @@ export default function network(
                     if (n.id === action.payload.id) {
                         return {
                             ...n,
-                            pos: action.payload.pos
+                            ...action.payload
                         }
                     }
                     return n
@@ -108,21 +110,65 @@ export default function network(
                 ...state.neurons,
                 {
                     ...initialNeuronState,
-                    id: action.payload.id,
-                    pos: action.payload.pos
+                    ...action.payload
                 }
             ]
         }
-    } else if (addSynapse.test(action)) {
+    } else if (removeNeuron.test(action)) {
+        const neuronToRemove: NeuronState = state.neurons.find(n => n.id == action.payload.id)!!
+        const synapsesToRemove: Array<{synapseId: string}> = _.concat(
+            neuronToRemove.axon.synapses,
+            neuronToRemove.dends.map(d => ({synapseId: d.synapseId}))
+        )
         return {
             ...state,
+            neurons: _.chain(state.neurons)
+                .filter(n => n.id !== action.payload.id)
+                .map(n => ({
+                    ...n,
+                    axon: {
+                        ...n.axon,
+                        synapses: _.differenceBy(n.axon.synapses, synapsesToRemove, 'synapseId')
+                    },
+                    dends: _.differenceBy(n.dends, synapsesToRemove, 'synapseId')
+                }))
+                .value(),
+            synapses: _.differenceWith(state.synapses, synapsesToRemove, (a,b) => a.id == b.synapseId)
+        }
+    }
+    else if (addSynapse.test(action)) {
+        return {
+            ...state,
+            neurons: state.neurons.map(n => {
+                if (n.id == action.payload.axon.neuronId) {
+                    return {
+                        ...n,
+                        axon: {
+                            ...n.axon,
+                            synapses: _.concat(n.axon.synapses, {synapseId: action.payload.id})
+                        }
+                    }
+                } else if (n.id == action.payload.dend.neuronId) {
+                    return {
+                        ...n,
+                        dends: n.dends.map(d => {
+                            if (d.id == action.payload.dend.id) {
+                                return {
+                                    ...d,
+                                    synapseId: action.payload.id
+                                }
+                            }
+                            return d
+                        })
+                    }
+                }
+                return n
+            }),
             synapses: [
                 ...state.synapses,
                 {
                     ...initialSynapseState,
-                    id: action.payload.id,
-                    axon: action.payload.axon,
-                    dend: action.payload.dend
+                    ...action.payload
                 }
             ]
         }
@@ -131,8 +177,7 @@ export default function network(
             ...state,
             ghostSynapse: {
                 axon: {
-                    id: action.payload.id,
-                    neuronId: action.payload.neuronId
+                    ...action.payload
                 }
             }
         }
@@ -141,8 +186,7 @@ export default function network(
             ...state,
             ghostSynapse: {
                 dend: {
-                    id: action.payload.id,
-                    neuronId: action.payload.neuronId
+                    ...action.payload
                 }
             }
         }
@@ -157,10 +201,7 @@ export default function network(
                             dends: [
                                 ...n.dends,
                                 {
-                                    id: action.payload.id,
-                                    cpos: action.payload.cpos,
-                                    nu: action.payload.nu,
-                                    incomingAngle: action.payload.incomingAngle,
+                                    ...action.payload,
                                     arc: { start: action.payload.nu - 1 / 16, stop: action.payload.nu + 1 / 16 },
                                     weighting: 30,
                                     synapseId: 's'

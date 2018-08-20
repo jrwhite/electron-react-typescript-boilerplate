@@ -2,16 +2,18 @@ import * as React from 'react'
 import { RouteComponentProps, StaticRouter } from 'react-router';
 import { Ellipse } from './Ellipse';
 import { Point } from '../utils/geometry';
-import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, } from '../actions/network';
+import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronAction, } from '../actions/network';
 import Draggable from 'react-draggable'
 import { DendStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
 import { Dendrite } from './Dendrite'
 import { Soma } from './Soma'
+import { remote } from 'electron';
+const { Menu } = remote
 const d3 = require('d3')
 
 export interface IProps extends RouteComponentProps<any> {
-    selectNeuron: (payload: SelectNeuronAction) => void,
+    removeNeuron: (payload: RemoveNeuronAction) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
     tryMakeSynapseAtNewDend: (neuronId: string, neuronPos: Point) => void
@@ -33,6 +35,67 @@ export class Neuron extends React.Component<IProps,IState> {
         if (this.state.selected != prevState.selected) {
             this.renderD3()
         }
+    }
+
+    componentDidMount () {
+        this.renderD3()
+    }
+
+    handleNeuronClick (e: React.MouseEvent<SVGGElement>) {
+        e.preventDefault()
+        const { tryMakeSynapseAtNewDend, id, pos } = this.props
+
+        tryMakeSynapseAtNewDend(id, pos)
+    }
+
+    handleAxonClick (e: React.MouseEvent<SVGCircleElement>) {
+        e.preventDefault()
+        const { tryMakeSynapseAtAxon, id, pos } = this.props
+
+        tryMakeSynapseAtAxon('a', id)
+    }
+
+    handleContextMenu(e: React.MouseEvent<SVGGElement>) {
+        e.stopPropagation()
+        e.preventDefault()
+        const {
+            removeNeuron,
+            id
+        } = this.props
+
+        Menu.buildFromTemplate([
+            {
+                label: 'Remove neuron',
+                click: () => removeNeuron({id: id})
+            }
+        ]).popup(remote.getCurrentWindow())
+    }
+    
+    render() {
+        const {
+            pos,
+            id,
+            dends,
+            potential
+        } = this.props
+
+        return (
+            <g
+                id={id} transform={"translate(" + pos.x + " " + pos.y + ")"}
+                onContextMenu={this.handleContextMenu.bind(this)}
+            >
+                <g
+                        onClick = {this.handleNeuronClick.bind(this)}
+                >
+                    <NeuronBody dends={dends} />
+                    <Soma potential={potential} />
+                    {dends.map(d => <Dendrite key={d.id} dend={d} />)}
+                </g>
+                <circle cx={50} cy={0} r={5}
+                    onClick = {this.handleAxonClick.bind(this)}
+                />
+            </g>
+        )
     }
 
     setSelected = (val: boolean) => {
@@ -69,57 +132,8 @@ export class Neuron extends React.Component<IProps,IState> {
             selected
         } = this.state
 
-        console.log("renderD3")
-
         d3.select("#" + id)
             .classed("selected", selected)
             .call(d3.drag().on("start", this.onDragStarted).on("drag", this.onDragged))
     }
-
-    componentDidMount () {
-        this.renderD3()
-    }
-
-    handleNeuronClick (e: React.MouseEvent<SVGGElement>) {
-        e.preventDefault()
-        const { tryMakeSynapseAtNewDend, id, pos } = this.props
-
-        tryMakeSynapseAtNewDend(id, pos)
-    }
-
-    handleAxonClick (e: React.MouseEvent<SVGCircleElement>) {
-        e.preventDefault()
-        const { tryMakeSynapseAtAxon, id, pos } = this.props
-
-        tryMakeSynapseAtAxon('a', id)
-    }
-    
-    render() {
-        const {
-            selectNeuron,
-            moveNeuron,
-            pos,
-            id,
-            dends,
-            potential
-        } = this.props
-
-        return (
-            <g
-                id={id} transform={"translate(" + pos.x + " " + pos.y + ")"}
-            >
-                <g
-                        onClick = {this.handleNeuronClick.bind(this)}
-                >
-                    <NeuronBody dends={dends} />
-                    <Soma potential={potential} />
-                    {dends.map(d => <Dendrite key={d.id} dend={d} />)}
-                </g>
-                <circle cx={50} cy={0} r={5}
-                    onClick = {this.handleAxonClick.bind(this)}
-                />
-            </g>
-        )
-    }
-
 }

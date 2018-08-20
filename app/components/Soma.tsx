@@ -23,9 +23,9 @@ export const Soma: React.SFC<IProps> = (props) => {
 
     return (
         <g
-        className={potential >= 0 ? styles.excited : styles.depressed }
-        data-tid={potential >= 0 ? 'excited' : 'depressed' }
-        data-tclass={potential >= 0 ? 'excited' : 'depressed' }
+            className={potential >= 0 ? styles.excited : styles.depressed}
+            data-tid={potential >= 0 ? 'excited' : 'depressed'}
+            data-tclass={potential >= 0 ? 'excited' : 'depressed'}
         >
             <defs>
                 <clipPath id="clip-ellipse">

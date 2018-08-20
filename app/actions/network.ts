@@ -10,6 +10,10 @@ export type MoveNeuronAction = {
     pos: Point
 }
 
+export type RemoveNeuronAction = {
+    id: string
+}
+
 export type AddNeuronAction = {
     id: string,
     pos: Point
@@ -52,6 +56,7 @@ export type AddDendAction = {
     incomingAngle: number
 }
 
+export const removeNeuron = actionCreator<RemoveNeuronAction>('REMOVE_NEURON')
 export const moveNeuron = actionCreator<MoveNeuronAction>('MOVE_NEURON')
 export const addNeuron = actionCreator<AddNeuronAction>('ADD_NEURON')
 export const selectNeuron = actionCreator<SelectNeuronAction>('SELECT_NEURON')

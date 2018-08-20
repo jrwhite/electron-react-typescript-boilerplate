@@ -62,6 +62,7 @@ export class Network extends React.Component<IProps,IState> {
             synapses,
         } = this.props
 
+        // TODO: refactor ghostSynapse into separate component
         const axonNeuron = ghostSynapse.axon ? neurons.find(n => n.id === ghostSynapse.axon!!.neuronId) : undefined
         const dendNeuron = ghostSynapse.dend ? neurons.find(n => n.id === ghostSynapse.dend!!.neuronId) : undefined
 

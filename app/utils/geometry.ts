@@ -56,7 +56,7 @@ export const calcClosestDend = (to: Point, from: Point, ellipse: Ellipse) : Dend
 
     return {
         point: point,
-        nu: nu,
+        nu: nu / PI,
         inTheta: thetaIn
     }
 }

@@ -7,6 +7,7 @@ import Draggable from 'react-draggable'
 import { DendStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
 import { Dendrite } from './Dendrite'
+const d3 = require('d3')
 
 export interface IProps extends RouteComponentProps<any> {
     selectNeuron: (payload: SelectNeuronAction) => void,
@@ -18,8 +19,64 @@ export interface IProps extends RouteComponentProps<any> {
     dends: Array<DendStateType>
 }
 
-export class Neuron extends React.Component<IProps> {
+export interface IState {
+    selected: boolean
+}
+
+export class Neuron extends React.Component<IProps,IState> {
     props: IProps
+    state: IState = {selected: false}
+
+    componentDidUpdate (prevProps: IProps, prevState: IState) {
+        if (this.state.selected != prevState.selected) {
+            this.renderD3()
+        }
+    }
+
+    setSelected = (val: boolean) => {
+        this.setState({selected: val})
+    }
+
+    onDragStarted = () => {
+        this.setSelected(true)
+    }
+
+    onDragged = () => {
+        const {
+            id,
+            pos,
+            moveNeuron
+        } = this.props
+
+        const newPos: Point = {
+            ...d3.event
+        }
+
+        moveNeuron({
+            id: id,
+            pos: newPos
+        })
+    }
+
+    renderD3() {
+        const {
+            id
+        } = this.props
+
+        const {
+            selected
+        } = this.state
+
+        console.log("renderD3")
+
+        d3.select("#" + id)
+            .classed("selected", selected)
+            .call(d3.drag().on("start", this.onDragStarted).on("drag", this.onDragged))
+    }
+
+    componentDidMount () {
+        this.renderD3()
+    }
 
     handleNeuronClick (e: React.MouseEvent<SVGGElement>) {
         e.preventDefault()
@@ -46,7 +103,7 @@ export class Neuron extends React.Component<IProps> {
 
         return (
             <g
-                transform={"translate(" + pos.x + " " + pos.y + ")"}
+                id={id} transform={"translate(" + pos.x + " " + pos.y + ")"}
             >
                 <g
                         onClick = {this.handleNeuronClick.bind(this)}
@@ -61,4 +118,5 @@ export class Neuron extends React.Component<IProps> {
             </g>
         )
     }
+
 }

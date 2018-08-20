@@ -92,7 +92,10 @@ export default function network(
             neurons: state.neurons.map(
                 (n: NeuronState) => {
                     if (n.id === action.payload.id) {
-                        n.pos = action.payload.pos
+                        return {
+                            ...n,
+                            pos: action.payload.pos
+                        }
                     }
                     return n
                 }
@@ -158,7 +161,7 @@ export default function network(
                                     cpos: action.payload.cpos,
                                     nu: action.payload.nu,
                                     incomingAngle: action.payload.incomingAngle,
-                                    arc: { start: action.payload.nu - 1 / 8, stop: action.payload.nu + 1 / 8 },
+                                    arc: { start: action.payload.nu - 1 / 16, stop: action.payload.nu + 1 / 16 },
                                     weighting: 30,
                                     synapseId: 's'
                                 }

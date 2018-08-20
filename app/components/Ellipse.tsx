@@ -22,7 +22,7 @@ export const Ellipse: React.SFC<IProps> = (props) => {
             <path d={ellipseBoundarySetter(major, minor, theta)} />
             </g>
             <g fill='none'>
-            <path  d={ellipsePathSetter(arcs, major, minor, theta)} />
+            <path stroke="red" d={ellipsePathSetter(arcs, major, minor, theta)} />
             </g>
         </g>
     )

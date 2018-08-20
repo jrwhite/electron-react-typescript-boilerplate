@@ -44,17 +44,9 @@ export const addPoints = (p1: Point, p2: Point): Point => ({
 })
 
 export const calcClosestDend = (to: Point, from: Point, ellipse: Ellipse) : DendGeo => {
-    /**
-     * Strategy:
-     * 1. choose a quadrant
-     * 2. go from small to large theta 
-     * 3. keep searching until local maximum
-     * 
-     * lol nevermind, just do it like a circle 
-     */
 
     const mCircleIn = (to.y - from.y) / (to.x - from.x)
-    const nu = Math.atan(mCircleIn) 
+    const nu = Math.PI+ Math.atan(mCircleIn) 
     const point = el(ellipse, nu)
 
     const elPrimeIn = elPrime(ellipse, nu)

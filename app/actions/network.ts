@@ -73,10 +73,9 @@ export function addNewSynapse(payload: AddNewSynapseAction) {
     }
 }
 
-export function addNewDend(neuronId: string, neuronPos: Point, axonPos: Point, bodyEllipse: Ellipse) {
+export function addNewDend(newDendId: string, neuronId: string, neuronPos: Point, axonPos: Point, bodyEllipse: Ellipse) {
     return (dispatch: Function) => {
         const newDendGeo: DendGeo = calcClosestDend(neuronPos, axonPos, bodyEllipse)
-        const newDendId = _.uniqueId('d')
 
         dispatch(addDend(
             {
@@ -117,10 +116,11 @@ export function tryMakeSynapseAtNewDend(neuronId: string, neuronPos: Point) {
             const newId = _.uniqueId('d')
             dispatch(
                 addNewDend(
+                    newId,
                     neuronId,
                     neuronPos,
                     getAxonAbsPos(getState(), ghost),
-                    { major: 50, minor: 20, theta: 0, ecc: 50 / 20 }
+                    { major: 50, minor: 30, theta: 0, ecc: 50 / 20 }
                 )
             )
             dispatch(tryMakeSynapseAtDend(newId, neuronId))

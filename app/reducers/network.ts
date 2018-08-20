@@ -1,6 +1,6 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse,  } from "../actions/network";
 import { Arc } from '../utils/geometry'
 
 export type AxonStateType = {
@@ -63,7 +63,7 @@ const initialNeuronState: NeuronState = {
     id: 'n',
     pos: {x: 0, y: 0},
     potential: 0,
-    axon: {id: 'a', cpos: {x: 25, y: 0}, synapses: []},
+    axon: {id: 'a', cpos: {x: 50, y: 0}, synapses: []},
     dends: []
 }
 
@@ -148,23 +148,34 @@ export default function network(
             ...state,
             neurons: state.neurons.map(
                 (n: NeuronState) => {
-                    if (n.id === action.payload.neuronId) {
-                        n.dends = [
-                            ...n.dends,
-                            {
-                                id: action.payload.id,
-                                cpos: action.payload.cpos,
-                                nu: action.payload.nu,
-                                incomingAngle: action.payload.incomingAngle,
-                                arc: {start: action.payload.nu - 1/8, stop: action.payload.nu + 1/8},
-                                weighting: 30,
-                                synapseId: 's'
-                            }
-                        ]
+                    if (n.id == action.payload.neuronId) {
+                        return {
+                            ...n,
+                            dends: [
+                                ...n.dends,
+                                {
+                                    id: action.payload.id,
+                                    cpos: action.payload.cpos,
+                                    nu: action.payload.nu,
+                                    incomingAngle: action.payload.incomingAngle,
+                                    arc: { start: action.payload.nu - 1 / 8, stop: action.payload.nu + 1 / 8 },
+                                    weighting: 30,
+                                    synapseId: 's'
+                                }
+                            ]
+                        }
                     }
                     return n
                 }
             )
+        }
+    } else if (resetGhostSynapse.test(action)) {
+        return {
+            ...state,
+            ghostSynapse: {
+                axon: undefined,
+                dend: undefined
+            }
         }
     }
     else {

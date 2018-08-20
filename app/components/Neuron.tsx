@@ -6,13 +6,13 @@ import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhost
 import Draggable from 'react-draggable'
 import { DendStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
+import { Dendrite } from './Dendrite'
 
 export interface IProps extends RouteComponentProps<any> {
     selectNeuron: (payload: SelectNeuronAction) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
-    tryMakeSynapseAtDend: (payload: MakeGhostSynapseAtDendAction) => void,
-    tryMakeSynapseAtNewDend: (neuronId: string) => void
+    tryMakeSynapseAtNewDend: (neuronId: string, neuronPos: Point) => void
     id: string,
     pos: Point,
     dends: Array<DendStateType>
@@ -23,9 +23,9 @@ export class Neuron extends React.Component<IProps> {
 
     handleNeuronClick (e: React.MouseEvent<SVGGElement>) {
         e.preventDefault()
-        const { tryMakeSynapseAtNewDend, id } = this.props
+        const { tryMakeSynapseAtNewDend, id, pos } = this.props
 
-        tryMakeSynapseAtNewDend(id)
+        tryMakeSynapseAtNewDend(id, pos)
     }
 
     handleAxonClick (e: React.MouseEvent<SVGCircleElement>) {
@@ -53,6 +53,7 @@ export class Neuron extends React.Component<IProps> {
                 >
                     <NeuronBody dends={dends} />
                     // TODO: Add Soma
+                    {dends.map(d => <Dendrite key={d.id} dend={d} />)}
                 </g>
                 <circle cx={50} cy={0} r={5}
                     onClick = {this.handleAxonClick.bind(this)}

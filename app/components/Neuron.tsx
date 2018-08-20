@@ -7,6 +7,7 @@ import Draggable from 'react-draggable'
 import { DendStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
 import { Dendrite } from './Dendrite'
+import { Soma } from './Soma'
 const d3 = require('d3')
 
 export interface IProps extends RouteComponentProps<any> {
@@ -16,7 +17,8 @@ export interface IProps extends RouteComponentProps<any> {
     tryMakeSynapseAtNewDend: (neuronId: string, neuronPos: Point) => void
     id: string,
     pos: Point,
-    dends: Array<DendStateType>
+    dends: Array<DendStateType>,
+    potential: number
 }
 
 export interface IState {
@@ -98,7 +100,8 @@ export class Neuron extends React.Component<IProps,IState> {
             moveNeuron,
             pos,
             id,
-            dends
+            dends,
+            potential
         } = this.props
 
         return (
@@ -109,7 +112,7 @@ export class Neuron extends React.Component<IProps,IState> {
                         onClick = {this.handleNeuronClick.bind(this)}
                 >
                     <NeuronBody dends={dends} />
-                    // TODO: Add Soma
+                    <Soma potential={potential} />
                     {dends.map(d => <Dendrite key={d.id} dend={d} />)}
                 </g>
                 <circle cx={50} cy={0} r={5}

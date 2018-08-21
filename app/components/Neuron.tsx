@@ -85,7 +85,7 @@ export class Neuron extends React.Component<IProps,IState> {
                 onContextMenu={this.handleContextMenu.bind(this)}
             >
                 <g
-                        onClick = {this.handleNeuronClick.bind(this)}
+                    onClick = {this.handleNeuronClick.bind(this)}
                 >
                     <NeuronBody dends={dends} />
                     <Soma potential={potential} />

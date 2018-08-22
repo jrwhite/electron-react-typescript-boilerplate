@@ -1,6 +1,6 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, finishFiringSynapse, resetSynapse, decayNetwork,  } from "../actions/network";
 import { Arc } from '../utils/geometry'
 import * as _ from 'lodash'
 import { Neuron } from "../components/Neuron";
@@ -41,7 +41,8 @@ export type SynapseState = {
     },
     length: number,
     width: number,
-    speed: number
+    speed: number,
+    isFiring: boolean,
 }
 
 export type GhostSynapseState = {
@@ -75,7 +76,8 @@ const initialSynapseState: SynapseState = {
     dend: {id: 'd', neuronId: 'n'},
     length: 0,
     width: 2,
-    speed: 1
+    speed: 1,
+    isFiring: true
 }
 
 const initialNetworkState: NetworkState = {
@@ -136,9 +138,66 @@ export default function network(
             synapses: _.differenceWith(state.synapses, synapsesToRemove, (a,b) => a.id == b.synapseId)
         }
     }
+    else if (exciteNeuron.test(action)) {
+        return {
+            ...state,
+            neurons: state.neurons.map(n => {
+                if (n.id == action.payload.id) {
+                    return {
+                        ...n,
+                        potential: n.potential + n.dends.find(d => d.id == action.payload.dendId)!!.weighting
+                    }
+                }
+                return n
+            })
+        }
+    }
+    else if (fireSynapse.test(action)) {
+        return {
+            ...state,
+            synapses: state.synapses.map(s => {
+                if (s.id == action.payload.id) {
+                    return {
+                        ...s,
+                        isFiring: true
+                    }
+                }
+                return s
+            })
+        }
+    }
+    else if (resetSynapse.test(action)) {
+        return {
+            ...state,
+            synapses: state.synapses.map(s => {
+                if (s.id == action.payload.id) {
+                    return {
+                        ...s,
+                        isFiring: false
+                    }
+                }
+                return s
+            })
+        }
+    }
+     else if (fireNeuron.test(action)) {
+        return {
+            ...state,
+            neurons: state.neurons.map(n => {
+                if (n.id == action.payload.id) {
+                    return {
+                        ...n,
+                        potential: -100
+                    }
+                }
+                return n
+            })
+        }
+    }
     else if (addSynapse.test(action)) {
         return {
             ...state,
+            // split into two reducers (synapse,neuron) with this logic in action
             neurons: state.neurons.map(n => {
                 if (n.id == action.payload.axon.neuronId) {
                     return {
@@ -220,6 +279,14 @@ export default function network(
                 axon: undefined,
                 dend: undefined
             }
+        }
+    }    else if (decayNetwork.test(action)) {
+        return {
+            ...state,
+            neurons: state.neurons.map(n => ({
+                ...n,
+                potential: n.potential * 63 /64
+            }))
         }
     }
     else {

@@ -73,7 +73,7 @@ export class Network extends React.Component<IProps,IState> {
                 onContextMenu={this.onContextMenu.bind(this)}
                 onMouseMove={this.handleMouseMove.bind(this)}
             >
-                {ghostSynapse && this.state.mouse? <GhostSynapse 
+                {ghostSynapse && this.state.mouse ? <GhostSynapse 
                     axon={axonNeuron ? {
                         pos: addPoints(axonNeuron.pos, axonNeuron.axon.cpos)
                     } : undefined}

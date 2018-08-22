@@ -56,6 +56,32 @@ export type AddDendAction = {
     incomingAngle: number
 }
 
+export type ExciteNeuron = {
+    id: string,
+    dendId: string
+}
+
+export type FireNeuron = {
+    id: string
+}
+
+export type StepNeuron = {
+    id: string
+}
+
+export type DecayNeuron = {
+    id: string
+}
+
+export type FireSynapse = {
+    id: string
+}
+
+
+export type ResetSynapse = {
+    id: string
+}
+
 export const removeNeuron = actionCreator<RemoveNeuronAction>('REMOVE_NEURON')
 export const moveNeuron = actionCreator<MoveNeuronAction>('MOVE_NEURON')
 export const addNeuron = actionCreator<AddNeuronAction>('ADD_NEURON')
@@ -65,6 +91,40 @@ export const makeGhostSynapseAtAxon = actionCreator<MakeGhostSynapseAtAxonAction
 export const makeGhostSynapseAtDend = actionCreator<MakeGhostSynapseAtDendAction>('MAKE_GHOST_SYNAPSE_AT_DEND')
 export const resetGhostSynapse = actionCreatorVoid('RESET_GHOST_SYNAPSE')
 export const addDend = actionCreator<AddDendAction>('ADD_DEND')
+export const decayNetwork = actionCreatorVoid('DECAY_NETWORK')
+export const stepNeuron = actionCreator<StepNeuron>('STEP_NEURON')
+export const fireNeuron = actionCreator<FireNeuron>('FIRE_NEURON')
+export const decayNeuron = actionCreator<DecayNeuron>('DECAY_NEURON')
+export const exciteNeuron = actionCreator<ExciteNeuron>('EXCITE_NEURON')
+export const fireSynapse = actionCreator<FireSynapse>('FIRE_SYNAPSE')
+export const resetSynapse = actionCreator<ResetSynapse>('FINISH_FIRING_SYNAPSE')
+
+export function finishFiringSynapse(id: string) {
+    return (dispatch: Function, getState: () => IState) => {
+        dispatch(resetSynapse({id: id}))
+        const dend: {id: string, neuronId: string} = getState().network.synapses.find(s => s.id == id)!!.dend
+        dispatch(exciteNeuron({id: dend.neuronId, dendId: dend.id}))
+    }
+}
+
+export function step(id: string) {
+    return (dispatch: Function, getState: () => IState) => {
+        const neuron = getState().network.neurons.find(n => n.id == id)!!
+
+        // check if neuron fired
+        if (neuron.potential > 100) {
+            // fire neuron
+            dispatch(fireNeuron({ id: id }))
+            // fire down synapses
+            // actually. lets have the neuron components do this because they can use the transition callback to do this on time
+            neuron.axon.synapses.forEach(s => dispatch(fireSynapse({id: s.synapseId})))
+            const synapses = getState().network.synapses.filter(s => s.axon.neuronId == id)
+            synapses.forEach(s => dispatch(exciteNeuron({id: s.dend.neuronId, dendId: s.dend.id})))
+        }
+        // decay neuron
+        dispatch(decayNeuron({id: id}))
+    }
+}
 
 export function addNewNeuron(pos: Point) {
     return (dispatch: Function) => {

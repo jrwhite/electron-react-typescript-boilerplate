@@ -4,7 +4,7 @@ import { Ellipse } from './Ellipse';
 import { Point } from '../utils/geometry';
 import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronAction, } from '../actions/network';
 import Draggable from 'react-draggable'
-import { DendStateType } from '../reducers/network';
+import { DendStateType, AxonStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
 import { Dendrite } from './Dendrite'
 import { Soma } from './Soma'
@@ -16,9 +16,10 @@ export interface IProps extends RouteComponentProps<any> {
     removeNeuron: (payload: RemoveNeuronAction) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
-    tryMakeSynapseAtNewDend: (neuronId: string, neuronPos: Point) => void
+    tryMakeSynapseAtNewDend: (neuronId: string, neuronPos: Point) => void,
     id: string,
     pos: Point,
+    axon: AxonStateType,
     dends: Array<DendStateType>,
     potential: number
 }

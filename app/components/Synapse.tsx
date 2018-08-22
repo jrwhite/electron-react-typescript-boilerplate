@@ -1,17 +1,19 @@
 import * as React from 'react'
+import { ActionPotential } from './ActionPotential'
 import { RouteComponentProps } from 'react-router';
 import { Point } from '../utils/geometry';
 import { Line } from './Line';
+import { ExciteNeuron } from '../actions/network'
 
 export interface IProps extends RouteComponentProps<any> {
+    finishFiringSynapse (id: string): void,
     id: string,
     axon: {id: string, neuronId: string},
     dend: {id: string, neuronId: string},
-    length: number,
     width: number,
     speed: number,
     axonPos: Point,
-    dendPos: Point
+    dendPos: Point,
 }
 
 export class Synapse extends React.Component<IProps> {
@@ -19,15 +21,28 @@ export class Synapse extends React.Component<IProps> {
 
     render() {
         const {
+            finishFiringSynapse,
             axonPos,
             dendPos,
+            id,
+            speed
         } = this.props
 
         const line = {start: axonPos, stop: dendPos}
+        const length = Math.hypot(axonPos.x - dendPos.x, axonPos.y - dendPos.y)
+        const apCallback = () => finishFiringSynapse(id)
 
         return (
-            <g>
+            <g id={id}>
                 <Line line={line} />
+                <ActionPotential 
+                    callback={apCallback}
+                    type={'EXCIT'}
+                    start={axonPos}
+                    stop={dendPos}
+                    speed={speed}
+                    length={length}
+                />
             </g>
         )
     }

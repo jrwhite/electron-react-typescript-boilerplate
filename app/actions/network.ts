@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import { Point, Line, Ellipse, DendGeo, calcClosestDend } from "../utils/geometry";
 import { actionCreator, actionCreatorVoid } from "./helpers";
-import { AxonStateType, DendStateType } from '../reducers/network';
+import { AxonStateType, DendStateType, NeuronState } from '../reducers/network';
 import { IState } from '../reducers';
 import { getAxonAbsPos } from '../selectors/synapse';
 
@@ -10,8 +10,8 @@ export type MoveNeuronAction = {
     pos: Point
 }
 
-export type RemoveNeuronAction = {
-    id: string
+export type RemoveNeuronsAction = {
+    neurons: Array<{id: string}>
 }
 
 export type AddNeuronAction = {
@@ -37,6 +37,10 @@ export type AddNewSynapseAction = {
 export type AddSynapseAction = {
     id: string,
 } & AddNewSynapseAction
+
+export type RemoveSynapsesAction = {
+    synapses: Array<{id: string}>
+}
 
 export type MakeGhostSynapseAtAxonAction = {
     id: string,
@@ -73,11 +77,21 @@ export type ResetSynapse = {
     id: string
 }
 
-export const removeNeuron = actionCreator<RemoveNeuronAction>('REMOVE_NEURON')
+export type AddInput = {
+    id: string,
+    pos: Point
+}
+
+export type RemoveInput = {
+    id: string
+}
+
+export const removeNeurons = actionCreator<RemoveNeuronsAction>('REMOVE_NEURONS')
 export const moveNeuron = actionCreator<MoveNeuronAction>('MOVE_NEURON')
 export const addNeuron = actionCreator<AddNeuronAction>('ADD_NEURON')
 export const selectNeuron = actionCreator<SelectNeuronAction>('SELECT_NEURON')
 export const addSynapse = actionCreator<AddSynapseAction>('ADD_SYNAPSE')
+export const removeSynapses = actionCreator<RemoveSynapsesAction>('REMOVE_SYNAPSE')
 export const makeGhostSynapseAtAxon = actionCreator<MakeGhostSynapseAtAxonAction>('MAKE_GHOST_SYNAPSE_AT_AXON')
 export const makeGhostSynapseAtDend = actionCreator<MakeGhostSynapseAtDendAction>('MAKE_GHOST_SYNAPSE_AT_DEND')
 export const resetGhostSynapse = actionCreatorVoid('RESET_GHOST_SYNAPSE')
@@ -87,6 +101,15 @@ export const hyperpolarizeNeuron = actionCreator<HyperpolarizeNeuron>('HYPERPOLA
 export const exciteNeuron = actionCreator<ExciteNeuron>('EXCITE_NEURON')
 export const fireSynapse = actionCreator<FireSynapse>('FIRE_SYNAPSE')
 export const resetSynapse = actionCreator<ResetSynapse>('FINISH_FIRING_SYNAPSE')
+export const addInput = actionCreator<AddInput>('ADD_INPUT')
+export const removeInput = actionCreator<RemoveInput>('REMOVE_INPUT')
+
+export function addNewInput(pos: Point) {
+    return (dispatch: Function) => {
+        const newId = _.uniqueId('in')
+        dispatch(addInput({id: newId, pos: pos}))
+    }
+}
 
 export function fireNeuron(id: string) {
     return (dispatch: Function, getState: () => IState) => {
@@ -105,6 +128,31 @@ export function finishFiringSynapse(id: string) {
 export function addNewNeuron(pos: Point) {
     return (dispatch: Function) => {
         dispatch(addNeuron({id: _.uniqueId('n'), pos: pos}))
+    }
+}
+
+export function removeNeuron(id: string) {
+    return (dispatch: Function) => {
+        dispatch(removeNeurons({neurons: [{id: id}]}))
+    }
+}
+
+export function removeNeuronWithSynapses(id: string) {
+    return (dispatch: Function, getState: () => IState) => {
+        const neuronToRemove: NeuronState = getState().network.neurons.find(n => n.id == id)!!
+        const synapsesToRemove: Array<{id: string}> = _.concat(
+            neuronToRemove.axon.synapses,
+            neuronToRemove.dends.map(d => ({id: d.synapseId}))
+        )
+        dispatch(removeNeuron(id))
+        dispatch(removeSynapses({synapses: synapsesToRemove}))
+    }
+}
+
+export function removeInputWithSynapses(id: string, synapses: Array<{id: string}>) {
+    return (dispatch: Function, getState: () => IState) => {
+        dispatch(removeSynapses({synapses: synapses}))
+        dispatch(removeInput({id: id}))
     }
 }
 

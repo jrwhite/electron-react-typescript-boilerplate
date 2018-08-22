@@ -1,6 +1,6 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, finishFiringSynapse, resetSynapse, decayNetwork, hyperpolarizeNeuron,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, finishFiringSynapse, resetSynapse, decayNetwork, hyperpolarizeNeuron, addInput, removeInput, removeSynapses, removeNeurons,  } from "../actions/network";
 import { Arc } from '../utils/geometry'
 import * as _ from 'lodash'
 import { Neuron } from "../components/Neuron";
@@ -8,7 +8,7 @@ import { Neuron } from "../components/Neuron";
 export type AxonStateType = {
     id: string,
     cpos: Point,
-    synapses: Array<{synapseId: string}>
+    synapses: Array<{id: string}>
 }
 
 export type DendStateType = {
@@ -57,12 +57,16 @@ export type GhostSynapseState = {
 }
 
 export type InputState = {
+    id: string,
     type: string,
-    axon: AxonStateType
+    pos: Point,
+    axon: AxonStateType,
 }
 
 export type OutputState = {
+    id: string,
     type: string,
+    pos: Point,
     dends: Array<DendStateType>
 }
 
@@ -70,7 +74,8 @@ export type NetworkState = {
     ghostSynapse: GhostSynapseState,
     neurons: Array<NeuronState>,
     synapses: Array<SynapseState>,
-    inputs: 
+    inputs:  Array<InputState>,
+    outputs: Array<OutputState>,
 }
 
 const initialNeuronState: NeuronState = {
@@ -91,10 +96,19 @@ const initialSynapseState: SynapseState = {
     isFiring: true
 }
 
+const initialInputState: InputState = {
+    id: 'in',
+    type: 'click',
+    pos: {x: 0, y: 0},
+    axon: {id: 'a', cpos: {x: 50, y: 0}, synapses: []},
+}
+
 const initialNetworkState: NetworkState = {
     ghostSynapse: {axon: undefined, dend: undefined},
     neurons: [],
     synapses: [],
+    inputs: [],
+    outputs: [],
 }
 
 export default function network(
@@ -127,28 +141,51 @@ export default function network(
                 }
             ]
         }
-    } else if (removeNeuron.test(action)) {
-        const neuronToRemove: NeuronState = state.neurons.find(n => n.id == action.payload.id)!!
-        const synapsesToRemove: Array<{synapseId: string}> = _.concat(
-            neuronToRemove.axon.synapses,
-            neuronToRemove.dends.map(d => ({synapseId: d.synapseId}))
-        )
+    } else if (removeNeurons.test(action)) {
+
         return {
             ...state,
-            neurons: _.chain(state.neurons)
-                .filter(n => n.id !== action.payload.id)
-                .map(n => ({
-                    ...n,
-                    axon: {
-                        ...n.axon,
-                        synapses: _.differenceBy(n.axon.synapses, synapsesToRemove, 'synapseId')
-                    },
-                    dends: _.differenceBy(n.dends, synapsesToRemove, 'synapseId')
-                }))
-                .value(),
-            synapses: _.differenceWith(state.synapses, synapsesToRemove, (a,b) => a.id == b.synapseId)
+            neurons: _.differenceBy(state.neurons, action.payload.neurons, 'id')
         }
-    } else if (exciteNeuron.test(action)) {
+    } else if (removeSynapses.test(action)) {
+        return {
+            ...state,
+            inputs: _.map(state.inputs, n => ({
+                ...n,
+                axon: {
+                    ...n.axon,
+                    synapses: _.differenceBy(n.axon.synapses, action.payload.synapses, 'id')
+                }
+            })),
+            neurons: _.map(state.neurons, n => ({
+                ...n,
+                axon: {
+                    ...n.axon,
+                    synapses: _.differenceBy(n.axon.synapses, action.payload.synapses, 'id')
+                },
+                dends: _.differenceWith(n.dends, action.payload.synapses, (a,b) => a.synapseId == b.id)
+            })),
+            synapses: _.differenceBy(state.synapses, action.payload.synapses, 'id')
+        }
+    }
+    else if (addInput.test(action)) {
+        return {
+            ...state,
+            inputs: [
+                ...state.inputs,
+                {
+                    ...initialInputState,
+                    ...action.payload
+                }
+            ]
+        }
+    } else if (removeInput.test(action)) {
+        return {
+            ...state,
+            inputs: _.differenceBy(state.inputs, [{id: action.payload.id}], 'id')
+        }
+    }
+    else if (exciteNeuron.test(action)) {
         return {
             ...state,
             neurons: state.neurons.map(n => {
@@ -210,7 +247,7 @@ export default function network(
                         ...n,
                         axon: {
                             ...n.axon,
-                            synapses: _.concat(n.axon.synapses, {synapseId: action.payload.id})
+                            synapses: _.concat(n.axon.synapses, {id: action.payload.id})
                         }
                     }
                 } else if (n.id == action.payload.dend.neuronId) {

@@ -2,7 +2,7 @@ import * as React from 'react'
 import { RouteComponentProps, StaticRouter } from 'react-router';
 import { Ellipse } from './Ellipse';
 import { Point } from '../utils/geometry';
-import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronAction, } from '../actions/network';
+import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronAction, FireSynapse, HyperpolarizeNeuron, } from '../actions/network';
 import Draggable from 'react-draggable'
 import { DendStateType, AxonStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
@@ -13,6 +13,8 @@ const { Menu } = remote
 const d3 = require('d3')
 
 export interface IProps extends RouteComponentProps<any> {
+    fireNeuron: (id: string) => void,
+    fireSynapse: (payload: FireSynapse) => void,
     removeNeuron: (payload: RemoveNeuronAction) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
@@ -74,11 +76,19 @@ export class Neuron extends React.Component<IProps,IState> {
     
     render() {
         const {
+            fireNeuron,
+            fireSynapse,
             pos,
             id,
+            axon,
             dends,
             potential
         } = this.props
+
+        if (potential > 100) {
+            fireNeuron(id)
+            axon.synapses.forEach(s => fireSynapse({id: s.synapseId}))
+        }
 
         return (
             <g

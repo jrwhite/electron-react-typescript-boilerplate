@@ -50,8 +50,6 @@ export class ActionPotential extends React.Component<IProps> {
             id
         } = this.props
 
-        console.log('ap transition')
-
         const transitionSetter = d3.transition()
             .duration(length / speed)
             .ease(d3.easeLinear)

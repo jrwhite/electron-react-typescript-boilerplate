@@ -42,6 +42,9 @@ export class Synapse extends React.Component<IProps> {
             <g id={id}>
                 <Line line={line} />
 
+                //TODO: refactor AP animation into synapse component
+                // actually. i think that we just need to take the ActionPotential out of synapse and prtty much never allow it to rerender
+                //TODO: refactor into ActionPotential container w/ selector. NEVER RERENDER
                 {actionPotentials.map(ap => 
                     <ActionPotential
                         id={ap.id}

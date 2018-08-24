@@ -4,11 +4,13 @@ import { Ellipse, ellipseBoundarySetter } from '../utils/geometry'
 let styles = require('./Soma.scss')
 
 export interface IProps {
+    id: string,
     potential: number // percentage
 }
 
 export const Soma: React.SFC<IProps> = (props) => {
     const {
+        id,
         potential
     } = props
 
@@ -28,7 +30,7 @@ export const Soma: React.SFC<IProps> = (props) => {
             data-tclass={potential >= 0 ? 'excited' : 'depressed'}
         >
             <defs>
-                <clipPath id="clip-ellipse">
+                <clipPath id={"clip-ellipse-" + id}>
                     <rect
                         x={potPx >= 0 ? potPx : (80 + potPx) -40}
                         y={-24}
@@ -39,7 +41,7 @@ export const Soma: React.SFC<IProps> = (props) => {
             </defs>
             <path
                 d={ellipseBoundarySetter(geo.major, geo.minor, geo.theta)}
-                clipPath="url(#clip-ellipse)"
+                clipPath={"url(#clip-ellipse-" + id + ")"}
             />
         </g>
     )

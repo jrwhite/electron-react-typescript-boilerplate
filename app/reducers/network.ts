@@ -1,6 +1,6 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, finishFiringSynapse, resetSynapse, decayNetwork, hyperpolarizeNeuron, addInput, removeInput, removeSynapses, removeNeurons, moveInput,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, resetSynapse, decayNetwork, hyperpolarizeNeuron, addInput, removeInput, removeSynapses, removeNeurons, moveInput, addApToSynapse, removeApFromSynapse,  } from "../actions/network";
 import { Arc } from '../utils/geometry'
 import * as _ from 'lodash'
 import { Neuron } from "../components/Neuron";
@@ -29,6 +29,10 @@ export type NeuronState = {
     dends: Array<DendStateType>
 }
 
+export type ActionPotentialState = {
+    id: string
+}
+
 export type SynapseState = {
     id: string,
     axon: {
@@ -43,6 +47,7 @@ export type SynapseState = {
     width: number,
     speed: number,
     isFiring: boolean,
+    actionPotentials: Array<ActionPotentialState>
 }
 
 export type GhostSynapseState = {
@@ -93,7 +98,8 @@ const initialSynapseState: SynapseState = {
     length: 100,
     width: 2,
     speed: 1,
-    isFiring: false
+    isFiring: false,
+    actionPotentials: []
 }
 
 const initialInputState: InputState = {
@@ -249,7 +255,43 @@ export default function network(
                 return s
             })
         }
-    } else if (resetSynapse.test(action)) {
+    } else if (addApToSynapse.test(action)) {
+        return {
+            ...state,
+            synapses: state.synapses.map(s => {
+                if (s.id == action.payload.synapseId) {
+                    return {
+                        ...s,
+                        actionPotentials: [
+                            ...s.actionPotentials,
+                            {
+                                id: action.payload.id
+                            }
+                        ]
+                    }
+                }
+                return s
+            })
+        }
+    } else if (removeApFromSynapse.test(action)) {
+        return {
+            ...state,
+            synapses: state.synapses.map(s => {
+                if (s.id == action.payload.synapseId) {
+                    return {
+                        ...s,
+                        actionPotentials: _.differenceBy(
+                            s.actionPotentials,
+                            [action.payload],
+                            'id'
+                        )
+                    }
+                }
+                return s
+            })
+        }
+    }
+    else if (resetSynapse.test(action)) {
         return {
             ...state,
             synapses: state.synapses.map(s => {

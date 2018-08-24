@@ -4,9 +4,10 @@ import { RouteComponentProps } from 'react-router';
 import { Point } from '../utils/geometry';
 import { Line } from './Line';
 import { ExciteNeuron } from '../actions/network'
+import { ActionPotentialState } from '../reducers/network';
 
 export interface IProps extends RouteComponentProps<any> {
-    finishFiringSynapse (id: string): void,
+    finishFiringApOnSynapse (id: string, synapseId: string): void,
     id: string,
     axon: {id: string, neuronId: string},
     dend: {id: string, neuronId: string},
@@ -16,6 +17,7 @@ export interface IProps extends RouteComponentProps<any> {
     axonPos: Point,
     dendPos: Point,
     isFiring: boolean,
+    actionPotentials: Array<ActionPotentialState>
 }
 
 export class Synapse extends React.Component<IProps> {
@@ -23,32 +25,34 @@ export class Synapse extends React.Component<IProps> {
 
     render() {
         const {
-            finishFiringSynapse,
+            finishFiringApOnSynapse,
             axonPos,
             dendPos,
             id,
             speed,
             isFiring,
+            actionPotentials
         } = this.props
 
         const line = {start: axonPos, stop: dendPos}
         const length = Math.hypot(axonPos.x - dendPos.x, axonPos.y - dendPos.y)
-        const apCallback = () => finishFiringSynapse(id)
+        const apCallback = (apId: string) => finishFiringApOnSynapse(apId, id)
 
         return (
             <g id={id}>
                 <Line line={line} />
 
-                {isFiring ? 
-                <ActionPotential 
-                    callback={apCallback}
-                    type={'EXCIT'}
-                    start={axonPos}
-                    stop={dendPos}
-                    speed={speed}
-                    length={length}
-                />
-                : undefined}
+                {actionPotentials.map(ap => 
+                    <ActionPotential
+                        id={ap.id}
+                        callback={() => apCallback(ap.id)}
+                        type={'EXCIT'}
+                        start={axonPos}
+                        stop={dendPos}
+                        speed={speed}
+                        length={length}
+                    />
+                )}
             </g>
         )
     }

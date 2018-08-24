@@ -6,6 +6,7 @@ import * as _ from 'lodash'
 const d3 = require('d3')
 
 export interface IProps {
+    id: string,
     callback: Function,
     type: string, // inhib / excit
     start: Point,
@@ -14,13 +15,8 @@ export interface IProps {
     length: number
 }
 
-export interface IState {
-    readonly id: string
-}
-
-export class ActionPotential extends React.Component<IProps,IState> {
+export class ActionPotential extends React.Component<IProps> {
     props: IProps
-    state: IState = {id: _.uniqueId('ap')}
 
     componentDidMount () {
         this.renderD3()
@@ -28,13 +24,10 @@ export class ActionPotential extends React.Component<IProps,IState> {
 
     render() {
         const {
+            id,
             type,
             start,
         } = this.props
-
-        const {
-            id
-        } = this.state
 
         return (
             <g>
@@ -53,12 +46,9 @@ export class ActionPotential extends React.Component<IProps,IState> {
             callback,
             stop,
             speed,
-            length
-        } = this.props
-
-        const {
+            length,
             id
-        } = this.state
+        } = this.props
 
         console.log('ap transition')
 

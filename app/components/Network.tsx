@@ -8,10 +8,12 @@ import Synapse from '../containers/Synapse'
 import Input from '../containers/Input'
 import { GhostSynapse } from './GhostSynapse';
 const { Menu } = remote
+const d3 = require('d3')
 
 export interface IProps extends RouteComponentProps<any> {
     addNewNeuron(pos: Point): void,
     addNewInput(pos: Point): void,
+    decayNetwork: () => void,
     ghostSynapse: GhostSynapseState,
     inputs: Array<InputState>,
     neurons: Array<NeuronState>,
@@ -22,17 +24,25 @@ export interface IState {
     mouse: {
         pos: Point
     }
+    interval: Object
 }
 
 const initialState: IState = {
     mouse : {
         pos : {x: 0, y: 0}
-    }
+    },
+    interval: Object
 }
 
 export class Network extends React.Component<IProps,IState> {
     props: IProps
     state: IState = initialState
+
+    componentDidMount () {
+        console.log(this.props)
+        this.startRuntime()
+    }
+
 
     onContextMenu(e: any) {
         e.preventDefault()
@@ -112,5 +122,14 @@ export class Network extends React.Component<IProps,IState> {
                 )}
             </svg>
         )
+    }
+
+    startRuntime() {
+        const { decayNetwork } = this.props
+        const step = () => {
+            decayNetwork()
+        }
+        const interval = d3.interval(step, 100)
+        this.setState({interval: interval})
     }
 }

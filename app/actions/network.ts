@@ -93,12 +93,24 @@ export type MoveInput = {
     pos: Point
 }
 
+export type AddApToSynapse = {
+    id: string,
+    synapseId: string
+}
+
+export type RemoveApFromSynapse = {
+    id: string,
+    synapseId: string
+}
+
 export const removeNeurons = actionCreator<RemoveNeuronsAction>('REMOVE_NEURONS')
 export const moveNeuron = actionCreator<MoveNeuronAction>('MOVE_NEURON')
 export const addNeuron = actionCreator<AddNeuronAction>('ADD_NEURON')
 export const selectNeuron = actionCreator<SelectNeuronAction>('SELECT_NEURON')
 export const addSynapse = actionCreator<AddSynapseAction>('ADD_SYNAPSE')
 export const removeSynapses = actionCreator<RemoveSynapsesAction>('REMOVE_SYNAPSE')
+export const addApToSynapse = actionCreator<AddApToSynapse>('ADD_AP_TO_SYNAPSE')
+export const removeApFromSynapse = actionCreator<RemoveApFromSynapse>('REMOVE_AP_FROM_SYNAPSE')
 export const makeGhostSynapseAtAxon = actionCreator<MakeGhostSynapseAtAxonAction>('MAKE_GHOST_SYNAPSE_AT_AXON')
 export const makeGhostSynapseAtDend = actionCreator<MakeGhostSynapseAtDendAction>('MAKE_GHOST_SYNAPSE_AT_DEND')
 export const resetGhostSynapse = actionCreatorVoid('RESET_GHOST_SYNAPSE')
@@ -126,10 +138,11 @@ export function fireNeuron(id: string) {
     }
 }
 
-export function finishFiringSynapse(id: string) {
+export function finishFiringApOnSynapse(id: string, synapseId: string) {
     return (dispatch: Function, getState: () => IState) => {
-        dispatch(resetSynapse({id: id}))
-        const dend: {id: string, neuronId: string} = getState().network.synapses.find(s => s.id == id)!!.dend
+        dispatch(resetSynapse({id: synapseId}))
+        dispatch(removeApFromSynapse({id: id, synapseId: synapseId}))
+        const dend: {id: string, neuronId: string} = getState().network.synapses.find(s => s.id == synapseId)!!.dend
         dispatch(exciteNeuron({id: dend.neuronId, dendId: dend.id}))
     }
 }
@@ -168,6 +181,12 @@ export function removeInputWithSynapses(id: string, synapses: Array<{id: string}
 export function addNewSynapse(payload: AddNewSynapseAction) {
     return (dispatch: Function) => {
         dispatch(addSynapse({id: _.uniqueId('s'), ...payload}))
+    }
+}
+
+export function addNewApToSynapse(id: string) {
+    return (dispatch: Function) => {
+        dispatch(addApToSynapse({id: _.uniqueId('ap'), synapseId: id}))
     }
 }
 

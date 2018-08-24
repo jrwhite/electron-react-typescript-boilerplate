@@ -2,7 +2,7 @@ import * as React from 'react'
 import { RouteComponentProps, StaticRouter } from 'react-router';
 import { Ellipse } from './Ellipse';
 import { Point } from '../utils/geometry';
-import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronsAction, FireSynapse, HyperpolarizeNeuron, } from '../actions/network';
+import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronsAction, FireSynapse, HyperpolarizeNeuron, addApToSynapse, AddApToSynapse, addNewApToSynapse, } from '../actions/network';
 import Draggable from 'react-draggable'
 import { DendStateType, AxonStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
@@ -15,6 +15,7 @@ const d3 = require('d3')
 export interface IProps extends RouteComponentProps<any> {
     fireNeuron: (id: string) => void,
     fireSynapse: (payload: FireSynapse) => void,
+    addNewApToSynapse: (id: string) => void,
     removeNeuron: (id: string) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
@@ -78,6 +79,7 @@ export class Neuron extends React.Component<IProps,IState> {
         const {
             fireNeuron,
             fireSynapse,
+            addNewApToSynapse,
             pos,
             id,
             axon,
@@ -87,7 +89,8 @@ export class Neuron extends React.Component<IProps,IState> {
 
         if (potential > 100) {
             fireNeuron(id)
-            axon.synapses.forEach(s => fireSynapse(s))
+            // axon.synapses.forEach(s => fireSynapse(s))
+            axon.synapses.forEach(s => addNewApToSynapse(s.id))
         }
 
         return (
@@ -99,7 +102,7 @@ export class Neuron extends React.Component<IProps,IState> {
                     onClick = {this.handleNeuronClick.bind(this)}
                 >
                     <NeuronBody dends={dends} />
-                    <Soma potential={potential} />
+                    <Soma potential={potential} id={id}/>
                     {dends.map(d => <Dendrite key={d.id} dend={d} />)}
                 </g>
                 <circle cx={50} cy={0} r={5}

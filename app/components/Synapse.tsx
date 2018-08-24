@@ -11,9 +11,11 @@ export interface IProps extends RouteComponentProps<any> {
     axon: {id: string, neuronId: string},
     dend: {id: string, neuronId: string},
     width: number,
+    length: number,
     speed: number,
     axonPos: Point,
     dendPos: Point,
+    isFiring: boolean,
 }
 
 export class Synapse extends React.Component<IProps> {
@@ -25,7 +27,8 @@ export class Synapse extends React.Component<IProps> {
             axonPos,
             dendPos,
             id,
-            speed
+            speed,
+            isFiring,
         } = this.props
 
         const line = {start: axonPos, stop: dendPos}
@@ -35,6 +38,8 @@ export class Synapse extends React.Component<IProps> {
         return (
             <g id={id}>
                 <Line line={line} />
+
+                {isFiring ? 
                 <ActionPotential 
                     callback={apCallback}
                     type={'EXCIT'}
@@ -43,6 +48,7 @@ export class Synapse extends React.Component<IProps> {
                     speed={speed}
                     length={length}
                 />
+                : undefined}
             </g>
         )
     }

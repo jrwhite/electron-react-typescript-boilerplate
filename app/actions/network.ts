@@ -16,6 +16,7 @@ export type RemoveNeuronsAction = {
 
 export type AddNeuronAction = {
     id: string,
+    axonId: string,
     pos: Point
 }
 
@@ -44,7 +45,7 @@ export type RemoveSynapsesAction = {
 
 export type MakeGhostSynapseAtAxonAction = {
     id: string,
-    neuronId: string
+    neuronId: string,
 }
 
 export type MakeGhostSynapseAtDendAction = {
@@ -79,11 +80,17 @@ export type ResetSynapse = {
 
 export type AddInput = {
     id: string,
+    axonId: string,
     pos: Point
 }
 
 export type RemoveInput = {
     id: string
+}
+
+export type MoveInput = {
+    id: string,
+    pos: Point
 }
 
 export const removeNeurons = actionCreator<RemoveNeuronsAction>('REMOVE_NEURONS')
@@ -103,11 +110,13 @@ export const fireSynapse = actionCreator<FireSynapse>('FIRE_SYNAPSE')
 export const resetSynapse = actionCreator<ResetSynapse>('FINISH_FIRING_SYNAPSE')
 export const addInput = actionCreator<AddInput>('ADD_INPUT')
 export const removeInput = actionCreator<RemoveInput>('REMOVE_INPUT')
+export const moveInput = actionCreator<MoveInput>('MOVE_INPUT')
 
 export function addNewInput(pos: Point) {
     return (dispatch: Function) => {
         const newId = _.uniqueId('in')
-        dispatch(addInput({id: newId, pos: pos}))
+        const newAxonId = _.uniqueId('a')
+        dispatch(addInput({id: newId, pos: pos, axonId: newAxonId}))
     }
 }
 
@@ -127,7 +136,7 @@ export function finishFiringSynapse(id: string) {
 
 export function addNewNeuron(pos: Point) {
     return (dispatch: Function) => {
-        dispatch(addNeuron({id: _.uniqueId('n'), pos: pos}))
+        dispatch(addNeuron({id: _.uniqueId('n'), pos: pos, axonId: _.uniqueId('a')}))
     }
 }
 
@@ -232,4 +241,3 @@ export function tryMakeSynapseAtAxon(id: string, neuronId: string) {
         }
     }
 }
-

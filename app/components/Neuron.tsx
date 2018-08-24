@@ -2,7 +2,7 @@ import * as React from 'react'
 import { RouteComponentProps, StaticRouter } from 'react-router';
 import { Ellipse } from './Ellipse';
 import { Point } from '../utils/geometry';
-import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronAction, FireSynapse, HyperpolarizeNeuron, } from '../actions/network';
+import { SelectNeuronAction, MoveNeuronAction, makeGhostSynapseAtAxon, MakeGhostSynapseAtAxonAction, makeGhostSynapseAtDend, MakeGhostSynapseAtDendAction, tryMakeSynapseAtAxon, tryMakeSynapseAtDend, tryMakeSynapseAtNewDend, RemoveNeuronsAction, FireSynapse, HyperpolarizeNeuron, } from '../actions/network';
 import Draggable from 'react-draggable'
 import { DendStateType, AxonStateType } from '../reducers/network';
 import { NeuronBody } from './NeuronBody'
@@ -15,7 +15,7 @@ const d3 = require('d3')
 export interface IProps extends RouteComponentProps<any> {
     fireNeuron: (id: string) => void,
     fireSynapse: (payload: FireSynapse) => void,
-    removeNeuron: (payload: RemoveNeuronAction) => void,
+    removeNeuron: (id: string) => void,
     moveNeuron: (payload: MoveNeuronAction) => void,
     tryMakeSynapseAtAxon: (id: string, neuronId: string) => void,
     tryMakeSynapseAtNewDend: (neuronId: string, neuronPos: Point) => void,
@@ -53,9 +53,9 @@ export class Neuron extends React.Component<IProps,IState> {
 
     handleAxonClick (e: React.MouseEvent<SVGCircleElement>) {
         e.preventDefault()
-        const { tryMakeSynapseAtAxon, id, pos } = this.props
+        const { tryMakeSynapseAtAxon, id, pos, axon } = this.props
 
-        tryMakeSynapseAtAxon('a', id)
+        tryMakeSynapseAtAxon(axon.id, id)
     }
 
     handleContextMenu(e: React.MouseEvent<SVGGElement>) {
@@ -69,7 +69,7 @@ export class Neuron extends React.Component<IProps,IState> {
         Menu.buildFromTemplate([
             {
                 label: 'Remove neuron',
-                click: () => removeNeuron({id: id})
+                click: () => removeNeuron(id)
             }
         ]).popup(remote.getCurrentWindow())
     }
@@ -87,7 +87,7 @@ export class Neuron extends React.Component<IProps,IState> {
 
         if (potential > 100) {
             fireNeuron(id)
-            axon.synapses.forEach(s => fireSynapse({id: s.synapseId}))
+            axon.synapses.forEach(s => fireSynapse(s))
         }
 
         return (

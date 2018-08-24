@@ -7,6 +7,7 @@ import { IState } from '../reducers';
 
 function mapStateToProps(state: IState): Partial<IProps> {
     return {
+        inputs: state.network.inputs,
         neurons: state.network.neurons,
         synapses: state.network.synapses,
         ghostSynapse: state.network.ghostSynapse

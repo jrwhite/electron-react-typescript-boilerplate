@@ -1,6 +1,6 @@
 import { Line, Point } from "../utils/geometry";
 import { IAction, IActionWithPayload } from "../actions/helpers";
-import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, finishFiringSynapse, resetSynapse, decayNetwork, hyperpolarizeNeuron, addInput, removeInput, removeSynapses, removeNeurons,  } from "../actions/network";
+import { moveNeuron, addNeuron, addSynapse, makeGhostSynapseAtDend, makeGhostSynapseAtAxon, addDend, resetGhostSynapse, removeNeuron, fireNeuron, fireSynapse, exciteNeuron, finishFiringSynapse, resetSynapse, decayNetwork, hyperpolarizeNeuron, addInput, removeInput, removeSynapses, removeNeurons, moveInput,  } from "../actions/network";
 import { Arc } from '../utils/geometry'
 import * as _ from 'lodash'
 import { Neuron } from "../components/Neuron";
@@ -90,10 +90,10 @@ const initialSynapseState: SynapseState = {
     id: 's',
     axon: {id: 'a', neuronId: 'n'},
     dend: {id: 'd', neuronId: 'n'},
-    length: 0,
+    length: 100,
     width: 2,
     speed: 1,
-    isFiring: true
+    isFiring: false
 }
 
 const initialInputState: InputState = {
@@ -137,7 +137,12 @@ export default function network(
                 ...state.neurons,
                 {
                     ...initialNeuronState,
-                    ...action.payload
+                    id: action.payload.id,
+                    pos: action.payload.pos,
+                    axon: {
+                        ...initialNeuronState.axon,
+                        id: action.payload.axonId
+                    }
                 }
             ]
         }
@@ -175,7 +180,12 @@ export default function network(
                 ...state.inputs,
                 {
                     ...initialInputState,
-                    ...action.payload
+                    id: action.payload.id,
+                    pos: action.payload.pos,
+                    axon: {
+                        ...initialInputState.axon,
+                        id: action.payload.axonId
+                    }
                 }
             ]
         }
@@ -183,6 +193,21 @@ export default function network(
         return {
             ...state,
             inputs: _.differenceBy(state.inputs, [{id: action.payload.id}], 'id')
+        }
+    } else if (moveInput.test(action)) {
+        return {
+            ...state,
+            inputs: state.inputs.map(
+                (n: InputState) => {
+                    if (n.id === action.payload.id) {
+                        return {
+                            ...n,
+                            ...action.payload
+                        }
+                    }
+                    return n
+                }
+            )
         }
     }
     else if (exciteNeuron.test(action)) {
@@ -241,6 +266,20 @@ export default function network(
         return {
             ...state,
             // split into two reducers (synapse,neuron) with this logic in action
+            inputs: state.inputs.map(n => {
+                if (n.id == action.payload.axon.neuronId) {
+                    return {
+                        ...n,
+                        axon: {
+                            ...n.axon,
+                            synapses: _.concat(
+                                n.axon.synapses, {id: action.payload.id}
+                            )
+                        }
+                    }
+                }
+                return n
+            }),
             neurons: state.neurons.map(n => {
                 if (n.id == action.payload.axon.neuronId) {
                     return {

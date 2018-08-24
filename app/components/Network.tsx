@@ -3,14 +3,17 @@ import { RouteComponentProps } from 'react-router'
 import Neuron from '../containers/Neuron'
 import { Point, addPoints } from '../utils/geometry';
 import { remote } from 'electron';
-import { NeuronState, SynapseState, GhostSynapseState } from '../reducers/network';
+import { NeuronState, SynapseState, GhostSynapseState, InputState } from '../reducers/network';
 import Synapse from '../containers/Synapse'
+import Input from '../containers/Input'
 import { GhostSynapse } from './GhostSynapse';
 const { Menu } = remote
 
 export interface IProps extends RouteComponentProps<any> {
     addNewNeuron(pos: Point): void,
+    addNewInput(pos: Point): void,
     ghostSynapse: GhostSynapseState,
+    inputs: Array<InputState>,
     neurons: Array<NeuronState>,
     synapses: Array<SynapseState>
 }
@@ -33,7 +36,7 @@ export class Network extends React.Component<IProps,IState> {
 
     onContextMenu(e: any) {
         e.preventDefault()
-        const { addNewNeuron } = this.props
+        const { addNewNeuron, addNewInput } = this.props
         const pos: Point = {x: e.nativeEvent.clientX, y: e.nativeEvent.clientY }
 
         Menu.buildFromTemplate([
@@ -41,6 +44,10 @@ export class Network extends React.Component<IProps,IState> {
                 label: 'Add neuron',
                 // click: () => addNeuron({key: _.uniqueId('n'), pos: poijknt})
                 click: () => addNewNeuron(pos)
+            },
+            {
+                label: 'Add input',
+                click: () => addNewInput(pos)
             } 
         ]).popup(remote.getCurrentWindow())
     }
@@ -60,6 +67,7 @@ export class Network extends React.Component<IProps,IState> {
             ghostSynapse,
             neurons,
             synapses,
+            inputs,
         } = this.props
 
         // TODO: refactor ghostSynapse into separate component
@@ -84,6 +92,12 @@ export class Network extends React.Component<IProps,IState> {
                     } : undefined}
                     mouse={this.state.mouse}
                 /> : undefined}
+                {inputs.map((input: InputState) => 
+                    <Input
+                        key={input.id}
+                        {...input}
+                    />
+                )}
                 {neurons.map((neuron: NeuronState) => 
                     <Neuron 
                         key={neuron.id} 
